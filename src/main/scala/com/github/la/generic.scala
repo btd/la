@@ -18,6 +18,8 @@ trait VectorLike[IndexType, Repr <: VectorLike[IndexType, Repr]] extends Sizing[
 
 	def map (f: ScalarProxy => ScalarProxy): Repr
 
+	private[la] def repr: Repr = this.asInstanceOf[Repr]
+
 	protected[la] def elementWiseOp(other: Repr, op: (Double, Double) => Double)
 			(f: VectorLikeFactory[IndexType, Repr]): Repr = {
 		require(this.size == other.size)

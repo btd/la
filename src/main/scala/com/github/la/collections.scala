@@ -7,8 +7,10 @@ class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int
 	val self = value
 
 	def size = 1
-	@inline def map(f: ScalarProxy => ScalarProxy): ScalarProxy = new ScalarProxy(f(this).self)
+	@inline def map(f: ScalarProxy => ScalarProxy): ScalarProxy = f(this)
+
 	def indexes = Seq(0)
+
 	def apply(idx: Int): Double = {
 		require(idx == 0)
 		self
@@ -21,6 +23,8 @@ class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int
 	def -(other: VectorProxy): VectorProxy = other - this
 	def /(other: VectorProxy): VectorProxy = other / this
 	def *(other: VectorProxy): VectorProxy = other * this
+
+	override def toString = self.toString
 
 }
 
@@ -48,7 +52,17 @@ class VectorProxy(value: Vector[ScalarProxy]) extends VectorLike[Int, VectorProx
 	def /(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ / other))
 	def *(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ * other))
 
-	override def toString = self.toString
+	override def equals (that: Any): Boolean = {
+		if(that.isInstanceOf[VectorLike[_, _]]) {
+			val other = that.asInstanceOf[VectorProxy]
+			size == other.size && !self.zip(other.self).exists(p => p._1 != p._2)
+		} else if(that.isInstanceOf[Vector[_]]) {
+			val other = that.asInstanceOf[Vector[_]]
+			size == other.size && !self.zip(other).exists(p => p._1 != p._2)
+		} else false
+	}
+
+	override def toString = self.mkString("[", ",", "]")
 }
 
 case class Col(value: Vector[ScalarProxy]) extends VectorProxy(value)
