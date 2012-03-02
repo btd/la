@@ -21,8 +21,10 @@ class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int
 
 	def +(other: VectorProxy): VectorProxy = other + this
 	def -(other: VectorProxy): VectorProxy = other - this
-	def /(other: VectorProxy): VectorProxy = other / this
+	def /(other: VectorProxy): VectorProxy = other.map(this / _)
 	def *(other: VectorProxy): VectorProxy = other * this
+
+
 
 	override def toString = self.toString
 
@@ -111,4 +113,26 @@ class Matrix(val self: Vector[ScalarProxy], val numRows: Int, val numCols: Int)
 	def -(other: ScalarProxy): Matrix = new Matrix(self.map(_ - other), numRows, numCols)
 	def /(other: ScalarProxy): Matrix = new Matrix(self.map(_ / other), numRows, numCols)
 	def *(other: ScalarProxy): Matrix = new Matrix(self.map(_ * other), numRows, numCols)
+
+	override def toString = {
+		0 until numRows map (this(_, all)) mkString ("[", ";\n", "]")
+	}
+
+	def square_? = numRows == numCols
+	def symmetric_? = {
+		square_? && !{
+			0 until numRows flatMap {r => 0 until r map {c => (r, c)}	} exists { p => this(p) != this(p.swap) }
+		}
+	}
+}
+
+object Matrix {
+	def rand(rows: Int, cols: Int) = {
+		require(rows > 0 && cols > 0)
+		new Matrix(Vector.fill(rows * cols)(util.Random.nextDouble), rows, cols)
+	}
+
+	def apply(v: Vector[Vector[Double]]) = {
+		new Matrix(v.map(_.map(new ScalarProxy(_))))
+	}
 }

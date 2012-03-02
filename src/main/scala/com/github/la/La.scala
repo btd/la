@@ -3,6 +3,7 @@ package com.github.la
 import collection._
 import mutable.Builder
 import generic._
+import org.apache.commons.math3.util.FastMath
 
 package object La {
 
@@ -24,11 +25,13 @@ package object La {
 			vector2vectorProxy(Vector(values: _*))
 		}
 	}
-	
+
+	def sqrt[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
+		seq.map(s => FastMath.sqrt(s.self))
 
 	def sin[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
-		seq.map(s => math.sin(s.self))
+		seq.map(s => FastMath.sin(s.self))
 
 	def cos[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
-		seq.map(s => math.cos(s.self))	
+		seq.map(s => FastMath.cos(s.self))	
 }

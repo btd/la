@@ -6,8 +6,7 @@ object ExampleApp extends App {
   import La._
 
 
-  val v = Vector[Double](math.Pi / 2)
-  val v2 = sin(v) + Vector(1.0)
+  val m = Matrix.rand(3, 3)
 
-  println(v2)
+  println(m)
 }

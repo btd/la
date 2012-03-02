@@ -22,6 +22,17 @@ class LaSpec extends Specification {
 	    Vector(1.0, 2.0) ** Vector(3.0, 10.0) ==== Vector(3.0, 20.0)
 	  }
 
+	  "can be multiplyed by scalar" in {
+	  	Vector(1.0, 2.0) * 2.0 ==== Vector(2.0, 4.0)
+	  }
+
+	  "can be substracted by scalar" in {
+	  	Vector(1.0, 2.0) - 2.0 ==== Vector(-1.0, 0.0)
+	  }
+
+	  "can be added by scalar" in {
+	  	Vector(1.0, 2.0) + 2.0 ==== Vector(3.0, 4.0)
+	  }
 	}
 
 	"Library" should {
@@ -34,6 +45,18 @@ class LaSpec extends Specification {
 		}
 		"calc sin of scalar" in {
 			sin(0.0) ==== 0.0
+		}
+	}
+
+	"Matrix" should {
+		"be square when cols = rows" in {
+			new Matrix(Vector.tabulate(3, 3)((i: Int, j: Int) => new ScalarProxy(i * j))).square_? must beTrue
+		}
+		"not be square when cols != rows" in {
+			new Matrix(Vector.tabulate(3, 4)((i: Int, j: Int) => new ScalarProxy(i * j))).square_? must beFalse
+		}
+		"be symmetric" in {
+			new Matrix(Vector.tabulate(3, 3)((i: Int, j: Int) => new ScalarProxy(i * j))).symmetric_? must beTrue
 		}
 	}
 }
