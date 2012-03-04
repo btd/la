@@ -15,16 +15,17 @@ class ScalarProxy(val self: Double) extends VectorLike[Int, ScalarProxy] {
 		self
 	}
 
-	def +(other: Vector): Vector = other + self
-	def -(other: Vector): Vector = other - self
-	def /(other: Vector): Vector = other.map(self / _)
-	def *(other: Vector): Vector = other * self
+	def +[Repr <: VectorLike[_, Repr]](other: VectorLike[_, Repr]): Repr = 
+		other + self
 
-	def +(other: Matrix): Matrix = other + self
-	def -(other: Matrix): Matrix = other - self
-	def /(other: Matrix): Matrix = other.map(self / _)
-	def *(other: Matrix): Matrix = other * self
+	def -[Repr <: VectorLike[_, Repr]](other: VectorLike[_, Repr]): Repr =
+		other - self
 
+	def *[Repr <: VectorLike[_, Repr]](other: VectorLike[_, Repr]): Repr = 
+		other * self
+
+	def /[Repr <: VectorLike[_, Repr]](other: VectorLike[_, Repr]): Repr = 
+		other.map(self / _)
 
 	override def toString = self.toString
 
@@ -42,8 +43,16 @@ class Vector private[la] (val self: Array[Double]) extends VectorLike[Int, Vecto
 
 	def apply(idx: Int): Double = self(idx)
 
-	//def apply(idx: Int): ScalarProxy = self(idx)
-	def apply(idx: Range): Vector = Vector(idx.map(apply(_)): _*)
+	def update(idx: Int, v: Double) { self(idx) = v }
+
+	def apply(idx: Seq[Int]): Vector = Vector(idx.map(apply(_)): _*)
+
+	def update(idx: Seq[Int], v: Vector) {
+		for{
+			(i, j) <- idx.zip(indexes)
+			value = v(j)
+		} update(i, value)
+	}
 
 	def apply(idx: all): Vector = this(indexes)
 
@@ -62,11 +71,33 @@ class Vector private[la] (val self: Array[Double]) extends VectorLike[Int, Vecto
 
 object Vector {
 	def apply(arr: Double*) = new Vector(arr.toArray)
-	def apply(arr: Array[Double]) = new Vector(arr)	
+	def apply(arr: Array[Double]) = new Vector(arr)
+	def apply(arr: collection.immutable.NumericRange[Double]) = new Vector(arr.toArray)
+
+	def rand(count: Int) = fill(count)(util.Random.nextDouble)
+
+	def zeros(count: Int) = fill(count)(0.0)
+
+	def fill(count: Int)(f: => Double) = {
+		require(count > 0)
+		apply(Array.fill(count)(f))
+	}
 }
 
-case class Col(arr: Array[Double]) extends Vector(arr)
-case class Row(arr: Array[Double]) extends Vector(arr)
+case class Col(arr: Array[Double]) extends Vector(arr) {
+	def repeat(n: Int): Matrix = {
+		require(n > 0)
+
+		Matrix.tabulate(arr.length, n)((i, j) => arr(i))
+	}
+}
+case class Row(arr: Array[Double]) extends Vector(arr) {
+	def repeat(n: Int): Matrix = {
+		require(n > 0)
+
+		Matrix.tabulate(n, arr.length)((i, j) => arr(j))
+	}
+}
 
 object Col {
 	def apply(arr: Double*):Col = Col(arr.toArray)
@@ -89,39 +120,45 @@ class Matrix private[la] (val self: Array[Double], val numRows: Int, val numCols
 
 	@inline def map(f: Double => Double): Matrix = new Matrix(self.map(f), numRows, numCols)
 
-	def apply(row: Int, col: Int): Double = self(row * numRows + col)
+	def apply(row: Int, col: Int): Double = self(row * numCols + col)
 
-	def apply(rows: Range, col: Int): Col = Vector(rows.map(row => apply(row, col)): _*).asCol
+	def apply(rows: Seq[Int], col: Int): Col = Vector(rows.map(row => apply(row, col)): _*).asCol
 
-	def apply(row: Int, cols: Range): Row = Vector(cols.map(col => apply(row, col)): _*).asRow
+	def apply(row: Int, cols: Seq[Int]): Row = Vector(cols.map(col => apply(row, col)): _*).asRow
 
-	def apply(rows: Range, cols: Range): Matrix = 
+	def apply(rows: Seq[Int], cols: Seq[Int]): Matrix = 
 		Matrix(rows.map(row => this(row, cols)): _*)
 
 	//for all
 	def apply(rows: all, col: Int): Col = apply(byRowsIndex, col)
 
-	def apply(rows: all, cols: Range): Matrix = apply(byRowsIndex, cols)
+	def apply(rows: all, cols: Seq[Int]): Matrix = apply(byRowsIndex, cols)
 
 	def apply(row: Int, cols: all): Row = {
 		val begin = row * numCols
 		Row(self.slice(begin, begin + numCols))
 	}
 
-	def apply(rows: Range, cols: all): Matrix = Matrix((rows.map(r => apply(r, all)): _*))
+	def apply(rows: Seq[Int], cols: all): Matrix = Matrix((rows.map(r => apply(r, all)): _*))
 
 	override def toString = {
-		0 until numRows map (this(_, all)) mkString ("[", ";\n", "]")
+		byRowsIndex map (this(_, all)) mkString ("[", ";\n", "]")
 	}
 
 	def square_? = numRows == numCols
 	def symmetric_? = {
 		square_? && !{
-			0 until numRows flatMap {r => 0 until r map {c => (r, c)}	} exists { p => this(p) != this(p.swap) }
+			byRowsIndex flatMap {r => 0 until r map {c => (r, c)}	} exists { p => this(p) != this(p.swap) }
 		}
 	}
 
 	def empty_? = numRows <= 0 || numCols <= 0
+
+	def asVector = Vector(self)
+
+	def *(r: Row): Matrix = this ** r.repeat(numRows)
+
+	def *(c: Col): Matrix = this ** c.repeat(numCols)
 }
 
 object Matrix {
@@ -141,5 +178,9 @@ object Matrix {
 		val v = collection.immutable.Vector.tabulate(rows, cols)(f).map(Row(_:_*))//жесть
 
 		Matrix(v:_*)
+	}
+
+	def meshgrid(x: Vector, y: Vector): (Matrix, Matrix) = {
+		(x.asRow.repeat(y.size), y.asCol.repeat(x.size))
 	}
 }

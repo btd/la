@@ -22,7 +22,7 @@ trait VectorLike[IndexType, Repr <: VectorLike[IndexType, Repr]] extends Sizing[
 
 	protected[la] def elementWiseOp(other: Repr, op: (Double, Double) => Double)
 			(f: VectorLikeFactory[IndexType, Repr]): Repr = {
-		require(this.size == other.size)
+		require(this.size == other.size, "Size not equals: first " + this.size + " second " + other.size)
 		f.make(this.indexes.map(i => op(this(i), other(i))), size)
 	}
 
@@ -40,6 +40,9 @@ trait VectorLike[IndexType, Repr <: VectorLike[IndexType, Repr]] extends Sizing[
 	def *(scalar: Double): Repr = map(_ * scalar)
 	def /(scalar: Double): Repr = map(_ / scalar)
 
+	def unary_- = this.map(s => -s)
+
+	lazy val mean: Double = indexes.map(this(_)).foldLeft(0.0)((c, v) => c + v) / indexes.size.asInstanceOf[Double]
 }
 
 

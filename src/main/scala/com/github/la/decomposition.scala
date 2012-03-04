@@ -23,7 +23,7 @@ class CholeskyDecomposition(a: Matrix) {
 		idx <- 0 until a.numRows
 		ltI = lTData(idx)
 	} {
-		require(ltI(idx) > DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD)
+		//require(ltI(idx) > DEFAULT_ABSOLUTE_POSITIVITY_THRESHOLD, "Matrix not positive defined")
 		ltI(idx) = FastMath.sqrt(ltI(idx))
 
 		val inverse = 1.0 / ltI(idx)
@@ -42,7 +42,7 @@ class CholeskyDecomposition(a: Matrix) {
 	val L = Matrix(Array.concat(lTData: _*), lTData.length, lTData(0).length)
 
 	def solve(b: Col): Row = {
-		require(b.size == L.numRows)
+		require(b.size == L.numRows, "Right side vector must be the same size = number of matrix rows")
 
 		val x = b.arr 
 
