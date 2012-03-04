@@ -8,7 +8,7 @@ import org.apache.commons.math3.util.FastMath
 package object La {
 
 	implicit def double2scalarProxy(d: Double): ScalarProxy = new ScalarProxy(d)
-	implicit def scalarProxy2double(sp: ScalarProxy): ScalarProxy = sp.self
+	implicit def scalarProxy2double(sp: ScalarProxy): Double = sp.self
 
 	implicit def vector2col(v: Vector) = v.asCol
 	
@@ -56,4 +56,9 @@ package object La {
 
 	def sum(m: Vector):Double = m.self.sum
 	
+	def gauss[IndexType, Repr <: VectorLike[IndexType, Repr]](x: VectorLike[IndexType, Repr]): Repr = 
+		(0.5 - 0.5 * cos(2 * Pi * x))
+
+	def pow[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr], p: Double): Repr = 
+		seq.map(s => FastMath.pow(s, p))
 }

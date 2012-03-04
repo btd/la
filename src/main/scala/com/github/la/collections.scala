@@ -67,12 +67,18 @@ class Vector private[la] (val self: Array[Double]) extends VectorLike[Int, Vecto
 
 	def asRow = Row(self)
 	def asCol = Col(self)
+
+	def norm(p: Double = 2.0): Double = {
+		require(p > 0)
+		pow(sum(pow(abs(this), p)), 1.0 / p)
+	}
 }
 
 object Vector {
 	def apply(arr: Double*) = new Vector(arr.toArray)
 	def apply(arr: Array[Double]) = new Vector(arr)
 	def apply(arr: collection.immutable.NumericRange[Double]) = new Vector(arr.toArray)
+	def apply(arr: Iterable[Double]) = new Vector(arr.toArray)
 
 	def rand(count: Int) = fill(count)(util.Random.nextDouble)
 
