@@ -6,7 +6,15 @@ object ExampleApp extends App {
   import La._
 
 
-  val m = Matrix.rand(3, 3)
+  val m = Matrix(
+  	Row(4.0, 1.0, 1.0), 
+  	Row(1.0, 4.0, 1.0), 
+  	Row(1.0, 1.0, 4.0)
+  )
 
-  println(m)
+  val solver = new CholeskyDecomposition(m)
+
+  println(solver.L)
+
+  println(solver.solve(Col(1, 1, 1)))
 }

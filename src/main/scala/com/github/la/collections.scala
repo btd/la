@@ -3,11 +3,10 @@ package com.github.la
 import math.Numeric._
 import La._
 
-class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int, ScalarProxy] {
-	val self = value
+class ScalarProxy(val self: Double) extends VectorLike[Int, ScalarProxy] {
 
 	def size = 1
-	@inline def map(f: ScalarProxy => ScalarProxy): ScalarProxy = f(this)
+	@inline def map(f: Double => Double): ScalarProxy = new ScalarProxy(f(self))
 
 	def indexes = Seq(0)
 
@@ -16,14 +15,15 @@ class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int
 		self
 	}
 
-	def /(other: ScalarProxy): ScalarProxy = new ScalarProxy(self / other.self)
-	def *(other: ScalarProxy): ScalarProxy = new ScalarProxy(self * other.self)
+	def +(other: Vector): Vector = other + self
+	def -(other: Vector): Vector = other - self
+	def /(other: Vector): Vector = other.map(self / _)
+	def *(other: Vector): Vector = other * self
 
-	def +(other: VectorProxy): VectorProxy = other + this
-	def -(other: VectorProxy): VectorProxy = other - this
-	def /(other: VectorProxy): VectorProxy = other.map(this / _)
-	def *(other: VectorProxy): VectorProxy = other * this
-
+	def +(other: Matrix): Matrix = other + self
+	def -(other: Matrix): Matrix = other - self
+	def /(other: Matrix): Matrix = other.map(self / _)
+	def *(other: Matrix): Matrix = other * self
 
 
 	override def toString = self.toString
@@ -33,86 +33,82 @@ class ScalarProxy(value: Double) extends Proxy.Typed[Double] with VectorLike[Int
 
 
 
-class VectorProxy(value: Vector[ScalarProxy]) extends VectorLike[Int, VectorProxy] {
-	val self = value
-
+class Vector private[la] (val self: Array[Double]) extends VectorLike[Int, Vector] {
 	val size: Int = self.size
-	def indexes = Vector.range(0, size)
 
-	@inline def map(f: ScalarProxy => ScalarProxy): VectorProxy = new VectorProxy(self.map(f))
+	def indexes = 0 until size
 
-	def apply(idx: Int): Double = self(idx).self
+	@inline def map(f: Double => Double): Vector = Vector(self.map(f))
+
+	def apply(idx: Int): Double = self(idx)
 
 	//def apply(idx: Int): ScalarProxy = self(idx)
-	def apply(idx: Range): VectorProxy = {
-		new VectorProxy(Vector.tabulate(idx.length)(i => self(idx(i))))
-	}
-	def apply(idx: all): VectorProxy = this(0 until self.size)
+	def apply(idx: Range): Vector = Vector(idx.map(apply(_)): _*)
 
-	def +(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ + other))
-	def -(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ - other))
-	def /(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ / other))
-	def *(other: ScalarProxy): VectorProxy = new VectorProxy(self.map(_ * other))
+	def apply(idx: all): Vector = this(indexes)
 
 	override def equals (that: Any): Boolean = {
-		if(that.isInstanceOf[VectorLike[_, _]]) {
-			val other = that.asInstanceOf[VectorProxy]
+		if(that.isInstanceOf[Vector]) {
+			val other = that.asInstanceOf[Vector]
 			size == other.size && !self.zip(other.self).exists(p => p._1 != p._2)
-		} else if(that.isInstanceOf[Vector[_]]) {
-			val other = that.asInstanceOf[Vector[_]]
-			size == other.size && !self.zip(other).exists(p => p._1 != p._2)
 		} else false
 	}
 
 	override def toString = self.mkString("[", ",", "]")
+
+	def asRow = Row(self)
+	def asCol = Col(self)
 }
 
-case class Col(value: Vector[ScalarProxy]) extends VectorProxy(value)
-case class Row(value: Vector[ScalarProxy]) extends VectorProxy(value)
+object Vector {
+	def apply(arr: Double*) = new Vector(arr.toArray)
+	def apply(arr: Array[Double]) = new Vector(arr)	
+}
 
-class Matrix(val self: Vector[ScalarProxy], val numRows: Int, val numCols: Int)
-		extends VectorLike[(Int, Int), Matrix] {
+case class Col(arr: Array[Double]) extends Vector(arr)
+case class Row(arr: Array[Double]) extends Vector(arr)
 
-	def this(value: Vector[Vector[ScalarProxy]]) {
-		this(value.flatten, value.size, value.headOption.map(_.size).getOrElse(0))
-	}
+object Col {
+	def apply(arr: Double*):Col = Col(arr.toArray)
+}
 
-	def this(v: Seq[Vector[ScalarProxy]]) {
-		this(Vector((v: _*)))
-	}
+object Row {
+	def apply(arr: Double*):Row = Row(arr.toArray)
+}
 
-	def apply(idx: (Int, Int)): Double = this(idx._1, idx._2).self
+class Matrix private[la] (val self: Array[Double], val numRows: Int, val numCols: Int)
+		extends VectorLike[(Int, Int), Matrix] {	
+
+	def apply(idx: (Int, Int)): Double = this(idx._1, idx._2)
 
 	val size: (Int, Int) = (numRows, numCols)
-	def indexes = Vector.tabulate(numRows, numCols)((i, j) => i -> j).flatten
 
-	@inline def map(f: ScalarProxy => ScalarProxy): Matrix = new Matrix(self.map(f), numRows, numCols)
+	def indexes = collection.immutable.Vector.tabulate(numRows, numCols)((i, j) => i -> j).flatten
 
-	def apply(row: Int, col: Int): ScalarProxy = self(row * numRows + col)
+	def byRowsIndex = 0 until numRows
 
-	def apply(rows: Range, col: Int): Col = Col(Vector.tabulate(rows.length)(i => apply(rows(i), col)))
+	@inline def map(f: Double => Double): Matrix = new Matrix(self.map(f), numRows, numCols)
 
-	def apply(row: Int, cols: Range): Row = Row(Vector.tabulate(cols.length)(i => apply(row, cols(i))))
+	def apply(row: Int, col: Int): Double = self(row * numRows + col)
+
+	def apply(rows: Range, col: Int): Col = Vector(rows.map(row => apply(row, col)): _*).asCol
+
+	def apply(row: Int, cols: Range): Row = Vector(cols.map(col => apply(row, col)): _*).asRow
 
 	def apply(rows: Range, cols: Range): Matrix = 
-		new Matrix(Vector.tabulate(rows.length, cols.length)((i, j) => apply(rows(i), cols(j))))
+		Matrix(rows.map(row => this(row, cols)): _*)
 
 	//for all
-	def apply(rows: all, col: Int): Col = apply(0 until numRows, col)
+	def apply(rows: all, col: Int): Col = apply(byRowsIndex, col)
 
-	def apply(rows: all, cols: Range): Matrix = apply(0 until numRows, cols)
+	def apply(rows: all, cols: Range): Matrix = apply(byRowsIndex, cols)
 
 	def apply(row: Int, cols: all): Row = {
 		val begin = row * numCols
 		Row(self.slice(begin, begin + numCols))
 	}
 
-	def apply(rows: Range, cols: all): Matrix = new Matrix(rows.map(r => apply(r, all).value))
-
-	def +(other: ScalarProxy): Matrix = new Matrix(self.map(_ + other), numRows, numCols)
-	def -(other: ScalarProxy): Matrix = new Matrix(self.map(_ - other), numRows, numCols)
-	def /(other: ScalarProxy): Matrix = new Matrix(self.map(_ / other), numRows, numCols)
-	def *(other: ScalarProxy): Matrix = new Matrix(self.map(_ * other), numRows, numCols)
+	def apply(rows: Range, cols: all): Matrix = Matrix((rows.map(r => apply(r, all)): _*))
 
 	override def toString = {
 		0 until numRows map (this(_, all)) mkString ("[", ";\n", "]")
@@ -124,15 +120,26 @@ class Matrix(val self: Vector[ScalarProxy], val numRows: Int, val numCols: Int)
 			0 until numRows flatMap {r => 0 until r map {c => (r, c)}	} exists { p => this(p) != this(p.swap) }
 		}
 	}
+
+	def empty_? = numRows <= 0 || numCols <= 0
 }
 
 object Matrix {
 	def rand(rows: Int, cols: Int) = {
 		require(rows > 0 && cols > 0)
-		new Matrix(Vector.fill(rows * cols)(util.Random.nextDouble), rows, cols)
+		new Matrix(Array.fill(rows * cols)(util.Random.nextDouble), rows, cols)
 	}
 
-	def apply(v: Vector[Vector[Double]]) = {
-		new Matrix(v.map(_.map(new ScalarProxy(_))))
+//	def apply(value: Seq[Seq[Double]]): Matrix = apply(value.flatten.toArray, value.size, value.headOption.map(_.size).getOrElse(0))
+
+	def apply(arr: Array[Double], rows: Int, cols: Int): Matrix = new Matrix(arr, rows, cols)
+
+	
+	def apply(rows: Row*): Matrix = apply(Array.concat((rows.map(_.arr): _*)), rows.size, rows.headOption.map(_.size).getOrElse(0))
+
+	def tabulate(rows: Int, cols: Int)(f: (Int, Int) => Double) = {
+		val v = collection.immutable.Vector.tabulate(rows, cols)(f).map(Row(_:_*))//жесть
+
+		Matrix(v:_*)
 	}
 }

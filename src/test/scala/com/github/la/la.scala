@@ -50,13 +50,13 @@ class LaSpec extends Specification {
 
 	"Matrix" should {
 		"be square when cols = rows" in {
-			new Matrix(Vector.tabulate(3, 3)((i: Int, j: Int) => new ScalarProxy(i * j))).square_? must beTrue
+			Matrix.tabulate(3, 3)(_ * _).square_? must beTrue
 		}
 		"not be square when cols != rows" in {
-			new Matrix(Vector.tabulate(3, 4)((i: Int, j: Int) => new ScalarProxy(i * j))).square_? must beFalse
+			Matrix.tabulate(3, 4)(_ * _).square_? must beFalse
 		}
 		"be symmetric" in {
-			new Matrix(Vector.tabulate(3, 3)((i: Int, j: Int) => new ScalarProxy(i * j))).symmetric_? must beTrue
+			Matrix.tabulate(3, 3)(_ * _).symmetric_? must beTrue
 		}
 	}
 }

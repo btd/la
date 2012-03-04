@@ -10,7 +10,8 @@ package object La {
 	implicit def double2scalarProxy(d: Double): ScalarProxy = new ScalarProxy(d)
 	implicit def scalarProxy2double(sp: ScalarProxy): ScalarProxy = sp.self
 
-	implicit def vector2vectorProxy(v: Vector[Double]): VectorProxy = new VectorProxy(v.map(new ScalarProxy(_)))
+	//implicit def vector2vectorProxy(v: Vector[Double]): VectorProxy = new VectorProxy(v.map(new ScalarProxy(_)))
+	//implicit def vector2vectorScalar(v: Vector[Double]): Vector[ScalarProxy] = v.map(new ScalarProxy(_))
 	
 	implicit object ScalarProxyFactory extends VectorLikeFactory[Int, ScalarProxy] {
 		def make(values: Seq[Double], size: Int): ScalarProxy = {
@@ -19,19 +20,19 @@ package object La {
 		}
 	}
 
-	implicit object VectorProxyFactory extends VectorLikeFactory[Int, VectorProxy] {
-		def make(values: Seq[Double], size: Int): VectorProxy = {
+	implicit object VectorFactory extends VectorLikeFactory[Int, Vector] {
+		def make(values: Seq[Double], size: Int): Vector = {
 			require(values.size == size)
-			vector2vectorProxy(Vector(values: _*))
+			Vector(values: _*)
 		}
 	}
 
 	def sqrt[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
-		seq.map(s => FastMath.sqrt(s.self))
+		seq.map(s => FastMath.sqrt(s))
 
 	def sin[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
-		seq.map(s => FastMath.sin(s.self))
+		seq.map(s => FastMath.sin(s))
 
 	def cos[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): VectorLike[Ind, Repr] = 
-		seq.map(s => FastMath.cos(s.self))	
+		seq.map(s => FastMath.cos(s))	
 }

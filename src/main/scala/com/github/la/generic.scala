@@ -16,7 +16,7 @@ trait VectorLike[IndexType, Repr <: VectorLike[IndexType, Repr]] extends Sizing[
 
 	def apply(idx: IndexType): Double
 
-	def map (f: ScalarProxy => ScalarProxy): Repr
+	def map (f: Double => Double): Repr
 
 	private[la] def repr: Repr = this.asInstanceOf[Repr]
 
@@ -34,6 +34,11 @@ trait VectorLike[IndexType, Repr <: VectorLike[IndexType, Repr]] extends Sizing[
 
 	def **(other: Repr)(implicit f: VectorLikeFactory[IndexType, Repr]): Repr = 
 		elementWiseOp(other, (a, b) => a*b)(f)
+
+	def +(scalar: Double): Repr = map(_ + scalar)
+	def -(scalar: Double): Repr = map(_ - scalar)
+	def *(scalar: Double): Repr = map(_ * scalar)
+	def /(scalar: Double): Repr = map(_ / scalar)
 
 }
 
