@@ -83,11 +83,14 @@ object Vector {
 	def rand(count: Int) = fill(count)(util.Random.nextDouble)
 
 	def zeros(count: Int) = fill(count)(0.0)
+	def ones(count: Int) = fill(count)(1.0)
 
 	def fill(count: Int)(f: => Double) = {
 		require(count > 0)
 		apply(Array.fill(count)(f))
 	}
+
+	def concat(v: Vector*):Vector = new Vector(Array.concat(v.map(_.self):_*))
 }
 
 case class Col(arr: Array[Double]) extends Vector(arr) {

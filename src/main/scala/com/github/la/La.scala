@@ -10,6 +10,8 @@ package object La {
 	implicit def double2scalarProxy(d: Double): ScalarProxy = new ScalarProxy(d)
 	implicit def scalarProxy2double(sp: ScalarProxy): Double = sp.self
 
+	implicit def numericRange2Vactor(nr: collection.immutable.NumericRange[Double]): Vector = Vector(nr :_*)
+
 	implicit def vector2col(v: Vector) = v.asCol
 	
 	implicit object ScalarProxyFactory extends VectorLikeFactory[Int, ScalarProxy] {
@@ -61,4 +63,9 @@ package object La {
 
 	def pow[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr], p: Double): Repr = 
 		seq.map(s => FastMath.pow(s, p))
+
+	def stddev(v1: Vector, v2:Vector) = {
+		val t = v1 - v2
+		sqrt(sum(t ** t) / t.size)
+	}
 }

@@ -3,7 +3,7 @@ package com.github.la
 trait Area {
 	//import Helper._
 
-	def in_?(x: Double, y: Double, eps: Double = 10E-10): Boolean
+	def in_?(x: Double, y: Double): Boolean
 
 	val center: (Double, Double)
 
@@ -11,9 +11,9 @@ trait Area {
 
    	def movedTo(x: Double, y: Double): Area 
 
-    def in(x: Vector, y: Vector, eps: Double = 10E-10): Seq[Int] = {
+    def in(x: Vector, y: Vector): Seq[Int] = {
     	require(x.size == y.size)
-    	for{idx <- x.indexes; if in_?(x(idx), y(idx), eps) } yield { idx }
+    	for{idx <- x.indexes; if in_?(x(idx), y(idx)) } yield { idx }
     }
 
     def scale[Ind, Repr <: VectorLike[Ind, Repr]](x: VectorLike[Ind, Repr], y: VectorLike[Ind, Repr]): (Repr, Repr) = 
@@ -38,7 +38,7 @@ case class SquareArea(
 
 	def movedTo(x: Double, y: Double): Area = SquareArea(x - w2, y - h2, x + w2, y + h2)
 
-	def in_?(x: Double, y: Double, eps: Double = 10E-10) = x1 - eps <= x && x <= x2 + eps && y1 - eps <= y && y <= y2 + eps
+	def in_?(x: Double, y: Double) = x1 <= x && x <= x2 && y1 <= y && y <= y2
 
 	def iterate(first: Area, stepX: Double, stepY: Double): Seq[Area] = {
 		require(stepX > 0.0 && stepY > 0.0, "Step must be > 0")
@@ -54,12 +54,12 @@ case class SquareArea(
 		}.flatten
 	}
 
-	def split(x: Vector, y: Vector, limit: Int): Seq[(SquareArea, (Vector, Vector))] = {
+	def split(x: Vector, y: Vector, limit: Int): Seq[SquareArea] = {
 		import collection.mutable.Queue
 
 		require(limit > 3)
-		val areas = Queue((this, (x, y)))
-		val areasUnsplittable = Queue[(SquareArea, (Vector, Vector))]()
+		val areas = Queue(this)
+		val areasUnsplittable = Queue[SquareArea]()
 
 		def split4(area: SquareArea): List[SquareArea] = {
 			val ltPoint = area.square._1
@@ -75,14 +75,12 @@ case class SquareArea(
 			val top = areas.dequeue
 			//println("Begin split " + top._1 + " ends " + areas.size)
 
-			val splittedTop = split4(top._1)
-			val pointsInSplitted = splittedTop.map(_.in(top._2._1, top._2._2, 10E-5))
+			val splittedTop = split4(top)
+			val pointsInSplitted = splittedTop.map(_.in(x,y))
 			if(!pointsInSplitted.exists(_.size < limit)) {
-				println(top._1)
-				println(pointsInSplitted)
-				areas.enqueue(splittedTop.zip(pointsInSplitted).map { p =>
-					(p._1, (top._2._1(p._2), top._2._2(p._2)))
-				}: _*)
+				//println(top._1)
+				//println(pointsInSplitted)
+				areas.enqueue(splittedTop: _*)
 			} else {
 				//println("--")
 				areasUnsplittable.enqueue(top)
@@ -101,5 +99,5 @@ case class CircularArea(cX: Double, cY: Double, r: Double) extends Area {
 
    def movedTo(x: Double, y: Double): Area = CircularArea(x, y, r)
 
-   def in_?(x: Double, y: Double, eps: Double = 10E-10) = abs(cX - x) - r <= eps && abs(cY - y) -r <= eps 
+   def in_?(x: Double, y: Double) = abs(cX - x) <= r && abs(cY - y) <= r
 }
