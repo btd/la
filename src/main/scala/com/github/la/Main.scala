@@ -29,12 +29,25 @@ object Main extends App {
       sqrt(sum(t ** t) / t.size)
    }
 
-   val z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups)
-   val z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups)
-   val z_byRBF = Approximation.RBF(gridX, gridY, cpX, cpY, cpZ)
-   
+   var z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups)
+   var z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups)
+   var z_byRBF = Approximation.RBF(gridX, gridY, cpX, cpY, cpZ)
 
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
    println("Error of RBF: " + stddev(gridZ, z_byRBF))
+
+
+   val splittedAreas = area.split(cpX, cpY, 7).map(_._1)
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, splittedAreas)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, splittedAreas)
+
+   //println(z_byPU)
+
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+   println("Error of RBF: " + stddev(gridZ, z_byRBF))
+
+   //println(splittedAreas)
 }
