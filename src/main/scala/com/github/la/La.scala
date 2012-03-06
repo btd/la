@@ -68,4 +68,13 @@ package object La {
 		val t = v1 - v2
 		sqrt(sum(t ** t) / t.size)
 	}
+
+	def dist(v1: Vector, v2: Vector) = sqrt(sum(pow(v1 - v2, 2.0)))
+
+	def dist(p1: (Double, Double), p2: (Double, Double)): Double = {
+		val v1 = Vector(p1._1, p1._2)
+		val v2 = Vector(p2._1, p2._2)
+
+		dist(v1, v2)
+	}
 }

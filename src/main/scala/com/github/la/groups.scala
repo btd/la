@@ -31,8 +31,11 @@ case class SquareArea(
 
 	val square = ((x1, y1), (x2, y2))
 
-	private val w2 = (x2 - x1) / 2.0
-	private val h2 = (y2 - y1) / 2.0
+	val width = x2 - x1
+	val height = y2 - y1
+	
+	private val w2 = width / 2.0
+	private val h2 = height / 2.0
 
 	val center = (x1 + w2, y1 + h2)
 
