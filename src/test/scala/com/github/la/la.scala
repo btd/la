@@ -49,6 +49,9 @@ class LaSpec extends Specification {
 	}
 
 	"Matrix" should {
+		"can be multiply by elements" in {
+			Matrix.tabulate(3, 3)(_ * _) ** Matrix.ones(3, 3) ==== Matrix.tabulate(3, 3)(_ * _ + 1.0)
+		}
 		"be square when cols = rows" in {
 			Matrix.tabulate(3, 3)(_ * _).square_? must beTrue
 		}

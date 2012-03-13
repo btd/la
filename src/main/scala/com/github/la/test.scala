@@ -9,8 +9,9 @@ object Approximation {
 	def norm(x1: Matrix, x2: Matrix): Matrix = sqrt(x1 ** x1 + x2 ** x2)
 
 	def kernel(m: Matrix): Matrix = {
-		val a = 0.05
-		exp(-abs(m)/a)**(1 + abs(m)/ a)
+		val a = 0.04
+		//exp(-abs(m)/a)**(1 + abs(m)/ a)
+		sqrt(m ** m + a * a)
 	}
 
 	def normalizedWeight(groups: Seq[Area], x: Vector, y: Vector, normP: Double = 2.0):Seq[Map[Int, Double]] = {
@@ -36,7 +37,7 @@ object Approximation {
 
 		val weightsAll = normalizedWeight(groups, gridX, gridY, 1.0)
 
-		for((group, groupIdx) <- groups.zipWithIndex) {
+		for((group, groupIdx) <- groups.par.zipWithIndex) {
 			val idx = group.in(cpX, cpY)
 
 			val groupedCpX = cpX(idx)
@@ -74,7 +75,7 @@ object Approximation {
 		val weightsAll = normalizedWeight(groups, gridX, gridY, 2.0)
 		val weightsCpAll = normalizedWeight(groups, cpX, cpY, 2.0)
 
-		for((group, groupIdx) <- groups.zipWithIndex) {
+		for((group, groupIdx) <- groups.par.zipWithIndex) {
 			val idx = group.in(cpX, cpY)
 
 			val weightsCp = Vector(idx.map(pointIndex => weightsCpAll(pointIndex)(groupIdx)))
@@ -111,8 +112,26 @@ object Approximation {
 	def RBF(gridX: Vector, gridY: Vector, cpX: Vector, cpY: Vector, cpZ: Vector): Vector = {
 		val (xi, xj) = Matrix.meshgrid(cpX, cpX)
 		val (yi, yj) = Matrix.meshgrid(cpY, cpY)
+		val A = kernel(norm((xi - xj), (yi - yj)))
 
-		val coeff = new CholeskyDecomposition(kernel(norm((xi - xj), (yi - yj)))).solve(cpZ asCol)
+		printToFile(new java.io.File("A")) {
+			_.write(A.toString)
+		}
+
+		printToFile(new java.io.File("B")) {
+			_.write(cpZ.toString)
+		}
+
+		val dec = new CholeskyDecomposition(A)
+		printToFile(new java.io.File("X")) {
+			_.write(dec.L.toString)
+		}
+
+		val coeff = dec.solve(cpZ asCol)
+
+		printToFile(new java.io.File("coeff")) {
+			_.write(coeff.toString)
+		}
 
 		val (gridXi, gridXj) = Matrix.meshgrid(gridX, cpX)
 		val (gridYi, gridYj) = Matrix.meshgrid(gridY, cpY)

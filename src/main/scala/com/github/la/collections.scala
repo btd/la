@@ -129,6 +129,8 @@ class Matrix private[la] (val self: Array[Double], val numRows: Int, val numCols
 
 	@inline def map(f: Double => Double): Matrix = new Matrix(self.map(f), numRows, numCols)
 
+	def update(idx: (Int, Int), v: Double) = self(idx._1 * numCols + idx._2) = v
+
 	def apply(row: Int, col: Int): Double = self(row * numCols + col)
 
 	def apply(rows: Seq[Int], col: Int): Col = Vector(rows.map(row => apply(row, col)): _*).asCol
@@ -191,5 +193,13 @@ object Matrix {
 
 	def meshgrid(x: Vector, y: Vector): (Matrix, Matrix) = {
 		(x.asRow.repeat(y.size), y.asCol.repeat(x.size))
+	}
+
+	def zeros(rows: Int, cols: Int) = fill(rows, cols)(0.0)
+	def ones(rows: Int, cols: Int) = fill(rows, cols)(1.0)
+
+	def fill(rows: Int, cols: Int)(f: => Double) = {
+		require(rows > 0 && cols > 0)
+		apply(Array.fill(rows * cols)(f), rows, cols)
 	}
 }
