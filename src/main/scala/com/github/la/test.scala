@@ -37,7 +37,7 @@ object Approximation {
 
 		val weightsAll = normalizedWeight(groups, gridX, gridY, 1.0)
 
-		for((group, groupIdx) <- groups.par.zipWithIndex) {
+		for((group, groupIdx) <- groups.zipWithIndex) {
 			val idx = group.in(cpX, cpY)
 
 			val groupedCpX = cpX(idx)
@@ -50,7 +50,7 @@ object Approximation {
 			val (yi, yj) = Matrix.meshgrid(groupedCpY, groupedCpY)
 			val A = kernel(norm((xi - xj), (yi - yj)))
 
-			val coeff = new CholeskyDecomposition(A).solve(B)
+			val coeff = new LUDecomposition(A).solve(B)
 
 			val idxGrid = group.in(gridX, gridY)
 			val groupedGridX = gridX(idxGrid)
@@ -61,7 +61,7 @@ object Approximation {
 			val (gridXi, gridXj) = Matrix.meshgrid(groupedGridX, groupedCpX)
 			val (gridYi, gridYj) = Matrix.meshgrid(groupedGridY, groupedCpY)
 
-			val lll = sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) * coeff.asCol) + groupedCpZ.mean
+			val lll = sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) ** coeff.asCol) + groupedCpZ.mean
 
 			values(idxGrid) = values(idxGrid) + weights ** lll
 
@@ -75,7 +75,7 @@ object Approximation {
 		val weightsAll = normalizedWeight(groups, gridX, gridY, 2.0)
 		val weightsCpAll = normalizedWeight(groups, cpX, cpY, 2.0)
 
-		for((group, groupIdx) <- groups.par.zipWithIndex) {
+		for((group, groupIdx) <- groups.zipWithIndex) {
 			val idx = group.in(cpX, cpY)
 
 			val weightsCp = Vector(idx.map(pointIndex => weightsCpAll(pointIndex)(groupIdx)))
@@ -90,7 +90,7 @@ object Approximation {
 			val (yi, yj) = Matrix.meshgrid(groupedCpY, groupedCpY)
 			val A = kernel(norm((xi - xj), (yi - yj)))
 
-			val coeff = new CholeskyDecomposition(A).solve(B)
+			val coeff = new LUDecomposition(A).solve(B)
 
 			val idxGrid = group.in(gridX, gridY)
 			val groupedGridX = gridX(idxGrid)
@@ -101,7 +101,7 @@ object Approximation {
 			val (gridXi, gridXj) = Matrix.meshgrid(groupedGridX, groupedCpX)
 			val (gridYi, gridYj) = Matrix.meshgrid(groupedGridY, groupedCpY)
 
-			val lll = sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) * coeff.asCol) + groupedCpZ.mean * weightsGrid
+			val lll = sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) ** coeff.asCol) + groupedCpZ.mean * weightsGrid
 
 			values(idxGrid) = values(idxGrid) + weightsGrid ** lll
 
@@ -112,30 +112,12 @@ object Approximation {
 	def RBF(gridX: Vector, gridY: Vector, cpX: Vector, cpY: Vector, cpZ: Vector): Vector = {
 		val (xi, xj) = Matrix.meshgrid(cpX, cpX)
 		val (yi, yj) = Matrix.meshgrid(cpY, cpY)
-		val A = kernel(norm((xi - xj), (yi - yj)))
 
-		printToFile(new java.io.File("A")) {
-			_.write(A.toString)
-		}
-
-		printToFile(new java.io.File("B")) {
-			_.write(cpZ.toString)
-		}
-
-		val dec = new CholeskyDecomposition(A)
-		printToFile(new java.io.File("X")) {
-			_.write(dec.L.toString)
-		}
-
-		val coeff = dec.solve(cpZ asCol)
-
-		printToFile(new java.io.File("coeff")) {
-			_.write(coeff.toString)
-		}
+		val coeff = new LUDecomposition(kernel(norm((xi - xj), (yi - yj)))).solve(cpZ asCol)
 
 		val (gridXi, gridXj) = Matrix.meshgrid(gridX, cpX)
 		val (gridYi, gridYj) = Matrix.meshgrid(gridY, cpY)
 
-		sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) * coeff.asCol)
+		sum(kernel(norm(gridXi - gridXj, gridYi - gridYj)) ** coeff.asCol)
 	}
 }

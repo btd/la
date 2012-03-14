@@ -8,47 +8,50 @@ object Main extends App {
    
    def func(x: Vector*): Vector = sin((x(0) + x(1)) * 10) + cos((x(0) - x(1)) * 5)
 
-   val numberOfContolPoints = 10
+   val numberOfContolPoints = 400
    val dim = 2
 
-   val mt = .0001
+   val mt = .0000001
    val vv = 0.0 to 1.0 by .07
 
-   //val cpX = Vector.concat(rand(numberOfContolPoints), zeros(vv.size) + mt, vv, ones(vv.size) - mt, vv)
-   //val cpY = Vector.concat(rand(numberOfContolPoints), vv, zeros(vv.size) + mt, vv, ones(vv.size) - mt)
-   val cpX = rand(numberOfContolPoints)
-   val cpY = rand(numberOfContolPoints)
+   val shiftX = 0.0
+   val shiftY = 0.0
+
+   val cpX = Vector.concat(rand(numberOfContolPoints), zeros(vv.size) + mt, vv, ones(vv.size) - mt, vv) + shiftX
+   val cpY = Vector.concat(rand(numberOfContolPoints), vv, zeros(vv.size) + mt, vv, ones(vv.size) - mt) + shiftY
+   //val cpX = rand(numberOfContolPoints)
+   //val cpY = rand(numberOfContolPoints)
    val cpZ = func(cpX, cpY)
 
    
-   val area = SquareArea(0.0, 0.0, 1.0, 1.0)
-   val groups = area.iterate(CircularArea(0.0, 0.0, 0.2), 0.2, 0.2)
+   val area = SquareArea(0.0 + shiftX, 0.0 + shiftY, 1.0 + shiftX, 1.0 + shiftY)
+   val groups = area.iterate(CircularArea(0.0 + shiftX, 0.0 + shiftY, 0.2), 0.2, 0.2)
 
    val gridStep = 0.05
 
    val v = 0.0 to 1.0 by gridStep
 
-   val gridX = v.asRow.repeat(v.size).asVector
-   val gridY = v.asCol.repeat(v.size).asVector
+   val gridX = v.asRow.repeat(v.size).asVector + shiftX
+   val gridY = v.asCol.repeat(v.size).asVector + shiftY
    val gridZ = func(gridX, gridY)
 
   
 
-   //var z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups)
-   //var z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups)
+   var z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups)
+   var z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups)
    var z_byRBF = Approximation.RBF(gridX, gridY, cpX, cpY, cpZ)
 
    println("Error of RBF: " + stddev(gridZ, z_byRBF))
 
-   //println(">>> Quality with simple circular iteration:")
-   //println("Error of PU: " + stddev(gridZ, z_byPU))
-   //println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+   println(">>> Quality with simple circular iteration:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
 
    //printToFile(new java.io.File("test")) { f =>
    //   f.write(z_byPU.toString)
    //}
-/*
+
    val points: Seq[(Double, Double)] = cpX.indexes.map(idx => (cpX(idx), cpY(idx)))
 
    val takeNumber = 20
@@ -73,7 +76,7 @@ object Main extends App {
    println("Error of PU: " + stddev(cpZ, z_byPU))
    println("Error of PUquad: " + stddev(cpZ, z_byPUquad))
 
-*/   
+
   /* val splittedAreas = area.split(cpX, cpY, 10)
 
    val t = 1.0

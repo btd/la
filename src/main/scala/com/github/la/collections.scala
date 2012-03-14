@@ -167,9 +167,9 @@ class Matrix private[la] (val self: Array[Double], val numRows: Int, val numCols
 
 	def asVector = Vector(self)
 
-	def *(r: Row): Matrix = this ** r.repeat(numRows)
+	def **(r: Row): Matrix = this ** r.repeat(numRows)
 
-	def *(c: Col): Matrix = this ** c.repeat(numCols)
+	def **(c: Col): Matrix = this ** c.repeat(numCols)
 }
 
 object Matrix {
