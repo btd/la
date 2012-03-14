@@ -25,8 +25,8 @@ printToFile(new java.io.File("viz.m")) { f =>
    def plotAreas(groups: Seq[Area]) = {
       groups.foreach { g =>
          g match {
-            case CircularArea(centerX, centerY, radius) => f.write ( "circle(%f, %f, %f);\n".format(centerX, centerY, radius))
-            case SquareArea(x1, y1, x2, y2) => f.write ( "rectangle(%f, %f, %f, %f);\n".format(x1, y1, x2 - x1, y2 - y1))
+            case CircularArea(centerX, centerY, radius) => f.write ( "circle([" + centerX + " "+centerY+"], "+radius+", 100, '--');\n")
+            case SquareArea(x1, y1, x2, y2) => f.write ( "rectangle('Position',["+x1+" "+y1+" "+(x2 - x1)+" "+(y2 - y1)+"]);\n")
          }
       }
    }
@@ -75,7 +75,7 @@ printToFile(new java.io.File("viz.m")) { f =>
 
       figure(idx * 2 + 1)
       exampleViz(idx)
-      f.write("zlim([-2 2]);")
+      f.write("zlim([-2 2]);\n")
    }
 
 
