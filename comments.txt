@@ -1,0 +1,47 @@
+//hardy
+Error of RBF: 0.010973092399535807
+>>> Quality with simple circular iteration:
+Error of PU: 0.01161030339532175
+Error of PUquad: 0.03621869718142644
+>>> Quality with limited circles:
+Error of PU: 0.016687046517082617
+Error of PUquad: 0.05722993957701519
+>>> Quality with subdivison:
+Error of PU: 0.011002278993298266
+Error of PUquad: 0.01486815441002356
+>>> Quality with subdivison=>circ by 1/2 :
+Error of PU: 0.06231167945639744
+Error of PUquad: 0.09281909589472379
+>>> Quality with subdivison=>circ by center:
+Error of PU: 0.016899154234307344
+Error of PUquad: 0.08530663631229911
+>>> Quality with subdivison=>circ by max:
+Error of PU: 0.010611039661809844
+Error of PUquad: 0.032370967023155686
+>>> Quality with subdivison=>circ in center square in circ:
+Error of PU: 0.014036723102820841
+Error of PUquad: 0.06716893922720268
+
+//second
+Error of RBF: 0.04476100475889435
+>>> Quality with simple circular iteration:
+Error of PU: 0.03944162559875715
+Error of PUquad: 0.058642456506169664
+>>> Quality with limited circles:
+Error of PU: 0.04182276183516931
+Error of PUquad: 0.07371885355517399
+>>> Quality with subdivison:
+Error of PU: 0.0409255284989837
+Error of PUquad: 0.045271321021339836
+>>> Quality with subdivison=>circ by 1/2 :
+Error of PU: 0.09183114254585596
+Error of PUquad: 0.10960184248504724
+>>> Quality with subdivison=>circ by center:
+Error of PU: 0.05235863202272792
+Error of PUquad: 0.0882051912580769
+>>> Quality with subdivison=>circ by max:
+Error of PU: 0.03897697104382212
+Error of PUquad: 0.05711555518444378
+>>> Quality with subdivison=>circ in center square in circ:
+Error of PU: 0.048645184566573685
+Error of PUquad: 0.07013776602458134
