@@ -232,10 +232,6 @@ printToFile(new java.io.File("viz.m")) { f =>
    z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ3)
    z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ3)
 
-      printToFile(new java.io.File("1.txt")) { f =>
-      f.write(z_byPU.toString)
-   }
-
    println(">>> Quality with subdivison=>circ by max:")
 
    println("Error of PU: " + stddev(gridZ, z_byPU))
