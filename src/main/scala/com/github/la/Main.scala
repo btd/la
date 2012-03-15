@@ -42,11 +42,13 @@ printToFile(new java.io.File("viz.m")) { f =>
       f.write ( """
          surf(gridX, gridY, puRes%d);
       """.format(idx))
+      f.write("zlim([-2 2]);\n")
 
       subplot(2, 2, 2)
       f.write ( """
          surf(gridX, gridY, puQuadRes%d);
       """.format(idx))
+      f.write("zlim([-2 2]);\n")
 
       subplot(2, 2, 3)
       f.write ( """
@@ -75,7 +77,6 @@ printToFile(new java.io.File("viz.m")) { f =>
 
       figure(idx * 2 + 1)
       exampleViz(idx)
-      f.write("zlim([-2 2]);\n")
    }
 
 
