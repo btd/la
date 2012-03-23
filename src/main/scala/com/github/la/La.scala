@@ -58,7 +58,7 @@ package object La {
 
 	def sum(m: Vector):Double = m.self.sum
 	
-	def gauss[IndexType, Repr <: VectorLike[IndexType, Repr]](x: VectorLike[IndexType, Repr]): Repr = 
+	def hann[IndexType, Repr <: VectorLike[IndexType, Repr]](x: VectorLike[IndexType, Repr]): Repr = 
 		(0.5 - 0.5 * cos(2 * Pi * x))
 
 	def pow[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr], p: Double): Repr = 

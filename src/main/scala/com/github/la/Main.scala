@@ -42,21 +42,31 @@ printToFile(new java.io.File("viz.m")) { f =>
       f.write ( """
          surf(gridX, gridY, puRes%d);
       """.format(idx))
+      f.write("zlim([-2 2]);\n")
+      f.write("title('PU');\n")
 
       subplot(2, 2, 2)
       f.write ( """
          surf(gridX, gridY, puQuadRes%d);
       """.format(idx))
+      f.write("zlim([-2 2]);\n")
+      f.write("title('PUquad');\n")
 
       subplot(2, 2, 3)
       f.write ( """
          surf(gridX, gridY, puRes%d - gridZ);
       """.format(idx))
+      f.write("diff = puRes%d - gridZ;\n".format(idx))
+      f.write("error = sqrt(sum(sum(diff .^2)) / numel(diff));\n")
+      f.write("title(strcat('PU diff (', num2str(error), ')'));\n")
 
       subplot(2, 2, 4)
       f.write ( """
          surf(gridX, gridY, puQuadRes%d - gridZ);
       """.format(idx))
+      f.write("diff = puQuadRes%d - gridZ;\n".format(idx))
+      f.write("error = sqrt(sum(sum(diff .^2)) / numel(diff));\n")
+      f.write("title(strcat('PUquad diff (', num2str(error), ')'));\n")
    }
 
    def exampleData(idx: Int, v1: Any, v2: Any, s: Int) = {
@@ -75,11 +85,11 @@ printToFile(new java.io.File("viz.m")) { f =>
 
       figure(idx * 2 + 1)
       exampleViz(idx)
-      f.write("zlim([-2 2]);\n")
+
    }
 
 
-   val numberOfContolPoints = 400
+   val numberOfContolPoints = 100
    val dim = 2
 
    val mt = -.0000001
@@ -95,6 +105,7 @@ printToFile(new java.io.File("viz.m")) { f =>
    val cpZ = func(cpX, cpY)
 
    f.write ( """
+      clear all; clc;
       cpN = %s;
       cpX = %s;
       cpY = %s;
@@ -156,6 +167,10 @@ printToFile(new java.io.File("viz.m")) { f =>
 
    val splittedAreas = area.split(cpX, cpY, 10)
 
+   figure(101)
+   plotAreas(splittedAreas)
+   f.write("title('Subdivision groups original');\n")
+
    val t = 1.0
    val splittedAreas2 = splittedAreas.map { a =>
       SquareArea(a.x1 - t * a.width, a.y1 - t * a.height, a.x2 + t * a.width,a.y2 + t * a.height)
@@ -180,7 +195,7 @@ printToFile(new java.io.File("viz.m")) { f =>
          CircularArea(a.square._2._1, a.square._1._2, d / 2.0),
          CircularArea(a.square._1._1, a.square._2._2, d / 2.0),
          CircularArea(a.square._2._1, a.square._2._2, d / 2.0),
-         CircularArea(a.center._1, a.center._1, d / 2.0)
+         CircularArea(a.center._1, a.center._2, d / 2.0)
       )
    }
 
@@ -264,9 +279,15 @@ printToFile(new java.io.File("viz.m")) { f =>
    """.format(z_byRBF, v.size, v.size))
    figure(100)
    subplot(1, 2, 1)
+   
    f.write ( "surf(gridX, gridY, rbfRes);\n")
+   f.write("title('RBF');\n")
 
    subplot(1, 2, 2)
-   f.write ( "surf(gridX, gridY, rbfRes - gridZ);\n")
+   f.write("surf(gridX, gridY, rbfRes - gridZ);\n")
+   f.write("diff = rbfRes - gridZ;\n")
+   f.write("error = sqrt(sum(sum(diff .^2)) / numel(diff));\n")
+   f.write("title(strcat('RBF diff (', num2str(error), ')'));\n")
+   
 }
 }
