@@ -113,7 +113,7 @@ printToFile(new java.io.File("viz.m")) { f =>
    """.format(numberOfContolPoints, cpX, cpY, cpZ))
 
 
-   val gridStep = 0.05
+   val gridStep = 0.02
 
    val v = 0.0 to 1.0 by gridStep
 
@@ -130,36 +130,55 @@ printToFile(new java.io.File("viz.m")) { f =>
    val area = SquareArea(0.0 + shiftX, 0.0 + shiftY, 1.0 + shiftX, 1.0 + shiftY)
    val groups = area.iterate(CircularArea(0.0 + shiftX, 0.0 + shiftY, 0.2), 0.2, 0.2)
 
-   
-
-
-   var z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups)
-   var z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups)
    var z_byRBF = Approximation.RBF(gridX, gridY, cpX, cpY, cpZ)
-
    println("Error of RBF: " + stddev(gridZ, z_byRBF))
 
+   var meaner: Approximation.Meaner = new Approximation.ltMean
+
+   var z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups, meaner)
+   var z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups, meaner)
 
    println(">>> Quality with simple circular iteration:")
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups, meaner)
+
+   println(">>> Quality with simple circular iteration:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+
 
    example(1, z_byPU, z_byPUquad, v.size, groups)
 
 
    val points: Seq[(Double, Double)] = cpX.indexes.map(idx => (cpX(idx), cpY(idx)))
 
-   val takeNumber = 20
+   val takeNumber = 10
    val rTh = 0.00001
    val groups2: Seq[CircularArea] = points.map { p => 
       val in = points.zipWithIndex.sortBy(p1 => dist(p, p1._1)).take(takeNumber + 1)//because of first will be p
       CircularArea(p._1, p._2, dist(p, in.last._1) + rTh) -> in.map(_._2)
    }.groupBy(p => p._2).values.map(_.head._1).toSeq
 
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups2)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups2)
-   //var z_byRBF = Approximation.RBF(gridX, gridY, cpX, cpY, cpZ)
+   meaner = new Approximation.ltMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups2, meaner)
+   
    println(">>> Quality with limited circles:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, groups2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, groups2, meaner)
+
+   println(">>> Quality with  limited circles:")
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
@@ -176,16 +195,24 @@ printToFile(new java.io.File("viz.m")) { f =>
       SquareArea(a.x1 - t * a.width, a.y1 - t * a.height, a.x2 + t * a.width,a.y2 + t * a.height)
    }
 
-   
-   
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, splittedAreas2)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, splittedAreas2)
+   meaner = new Approximation.ltMean
 
-   println(">>> Quality with subdivison:")
-
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, splittedAreas2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, splittedAreas2, meaner)
+   
+   println(">>> Quality with Subdivision:")
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, splittedAreas2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, splittedAreas2, meaner)
+
+   println(">>> Quality with Subdivision:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+   
    example(3, z_byPU, z_byPUquad, v.size, splittedAreas2)
 
    val circ1 = splittedAreas.flatMap { a =>
@@ -199,12 +226,21 @@ printToFile(new java.io.File("viz.m")) { f =>
       )
    }
 
+   meaner = new Approximation.ltMean
 
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ1)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ1)
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ1, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ1, meaner)
+   
+   println(">>> Quality with subdivison=>circ by 1/2:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
-   println(">>> Quality with subdivison=>circ by 1/2 :")
+   meaner = new Approximation.zMean
 
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ1, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ1, meaner)
+
+   println(">>> Quality with subdivison=>circ by 1/2:")
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
@@ -221,11 +257,21 @@ printToFile(new java.io.File("viz.m")) { f =>
    }
 
 
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ2)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ2)
+   meaner = new Approximation.ltMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ2, meaner)
+   
+   println(">>> Quality with subdivison=>circ by center:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ2, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ2, meaner)
 
    println(">>> Quality with subdivison=>circ by center:")
-
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
@@ -242,16 +288,21 @@ printToFile(new java.io.File("viz.m")) { f =>
       )
    }
 
+   meaner = new Approximation.ltMean
 
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ3)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ3)
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ3, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ3, meaner)
+   
+   println(">>> Quality with subdivison=>circ by max:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
-      printToFile(new java.io.File("1.txt")) { f =>
-      f.write(z_byPU.toString)
-   }
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ3, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ3, meaner)
 
    println(">>> Quality with subdivison=>circ by max:")
-
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 
@@ -261,12 +312,21 @@ printToFile(new java.io.File("viz.m")) { f =>
       CircularArea(a.center._1, a.center._2, dist(a.square._1, a.center) + 0.001)
    }
 
+   meaner = new Approximation.ltMean
 
-   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ4)
-   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ4)
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ4, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ4, meaner)
+   
+   println(">>> Quality with subdivison=>circ in center square in circ:")
+   println("Error of PU: " + stddev(gridZ, z_byPU))
+   println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
+
+   meaner = new Approximation.zMean
+
+   z_byPU = Approximation.PU(gridX, gridY, cpX, cpY, cpZ, circ4, meaner)
+   z_byPUquad = Approximation.PUquad(gridX, gridY, cpX, cpY, cpZ, circ4, meaner)
 
    println(">>> Quality with subdivison=>circ in center square in circ:")
-
    println("Error of PU: " + stddev(gridZ, z_byPU))
    println("Error of PUquad: " + stddev(gridZ, z_byPUquad))
 

@@ -50,6 +50,9 @@ package object La {
 	def abs[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): Repr = 
 		seq.map(s => FastMath.abs(s))
 
+	def ln[Ind, Repr <: VectorLike[Ind, Repr]](seq: VectorLike[Ind, Repr]): Repr = 
+		seq.map(s => if(s < 0.0) 0.0 else FastMath.log(s))
+
 	val Pi = math.Pi
 
 	def sum(m: Matrix):Vector = {
